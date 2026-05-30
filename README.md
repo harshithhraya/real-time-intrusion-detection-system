@@ -1,62 +1,232 @@
-# Real-Time Intrusion Detection System using BiLSTM
+# 🛡️ Real-Time Intrusion Detection System
 
-## Overview
+BiLSTM-Powered Network Security — Detect Threats as They Happen
 
-This project implements a real-time intrusion detection system using a BiLSTM deep learning model trained on the NSL-KDD dataset. It analyzes live network traffic and classifies it as normal or malicious.
+[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://tensorflow.org)
+[![Keras](https://img.shields.io/badge/Keras-Deep%20Learning-D00000?style=for-the-badge&logo=keras&logoColor=white)](https://keras.io)
+[![Dataset](https://img.shields.io/badge/Dataset-NSL--KDD-00C851?style=for-the-badge)](https://www.unb.ca/cic/datasets/nsl.html)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-## Features
+---
 
-* Real-time network traffic capture using Wireshark/tshark
-* Deep learning-based attack detection using BiLSTM
-* Classification of multiple attack categories
-* Efficient preprocessing and feature handling
+## 📌 Overview
 
-## Tech Stack
+> A production-grade **Intrusion Detection System (IDS)** that combines real-time packet sniffing with a **Bidirectional LSTM (BiLSTM)** deep learning model to classify live network traffic as **normal** or **malicious** — in real time.
 
-* Python
-* TensorFlow / Keras
-* Wireshark (tshark)
-* NSL-KDD Dataset
+Built on the gold-standard **NSL-KDD** dataset, this system bridges the gap between academic ML research and practical network defense. Instead of analyzing log files after the fact, it hooks directly into live traffic and makes instant predictions — making it suitable for deployment in security operations centers, research labs, or personal network monitoring.
 
-## Project Structure
+---
 
-* `realtime_ids.py` → Main real-time detection script
-* `convert_model.py` → Model conversion utilities
-* `fix_model_compatibility.py` → Compatibility fixes
-* `columns.pkl` → Feature columns used for prediction
-* `bilstm_ids.h5` → Trained model
+## ✨ Features
 
-## How It Works
+| Feature | Description |
+|---|---|
+| 🔴 **Real-Time Detection** | Captures and analyzes live packets using `tshark` (Wireshark CLI) |
+| 🧠 **BiLSTM Architecture** | Bidirectional LSTM captures temporal patterns in both directions for superior accuracy |
+| 🗂️ **Multi-Class Classification** | Detects multiple attack categories — DoS, Probe, R2L, U2R, and Normal |
+| ⚡ **Efficient Preprocessing** | Pickled column schema ensures fast, consistent feature alignment at inference time |
+| 🔄 **Model Compatibility Tools** | Includes utilities to convert and fix model versions across TF/Keras releases |
+| 📝 **Alert Logging** | Detected threats are logged in `ids_alerts.jsonl` for audit and analysis |
 
-1. Capture live network traffic using tshark
-2. Extract and preprocess features
-3. Feed processed data into BiLSTM model
-4. Predict whether traffic is normal or an attack
+---
 
-## How to Run
+## 🏗️ Architecture
 
-1. Install dependencies:
-
-```bash
-pip install tensorflow numpy pandas
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      NETWORK INTERFACE                          │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │  Live Packets
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   tshark / Wireshark                            │
+│              (Packet Capture & Feature Extraction)              │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │  Raw Features
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  Preprocessing Pipeline                         │
+│         Encoding  →  Normalization  →  Column Alignment         │
+│                    (columns.pkl schema)                         │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │  Feature Vector
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│               BiLSTM Deep Learning Model                        │
+│                                                                 │
+│   Input → [BiLSTM Layer] → [BiLSTM Layer] → [Dense] → Softmax  │
+│                ↑ Forward pass                                   │
+│                ↓ Backward pass                                  │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │  Prediction
+                          ▼
+            ┌─────────────────────────┐
+            │  Normal  /  Attack Type  │
+            │   + Alert Logging        │
+            └─────────────────────────┘
 ```
 
-2. Run the project:
+---
+
+## 📁 Project Structure
+
+```
+real-time-intrusion-detection-system/
+│
+├── 📄 realtime_ids.py             # 🚀 Main script — runs real-time IDS
+├── 📄 convert_model.py            # 🔧 Convert model between formats
+├── 📄 fix_model_compatibility.py  # 🛠️ Fix Keras version compatibility issues
+├── 📄 fix_columns_pkl.py          # 🛠️ Repair/rebuild the columns schema
+│
+├── 🤖 bilstm_ids.h5               # Trained BiLSTM model (HDF5)
+├── 🤖 bilstm.weights.h5           # Model weights only
+├── 🤖 fixed_model.keras           # Keras-native format (compatibility fixed)
+│
+├── 📦 columns.pkl                 # Feature column schema for preprocessing
+├── 📋 ids_alerts.jsonl            # Alert log (written at runtime)
+│
+└── 📖 README.md                   # You are here
+```
+
+---
+
+## 🧠 Model Details
+
+### Bidirectional LSTM (BiLSTM)
+
+A standard LSTM processes sequences in one direction (past → future). A **BiLSTM** runs two LSTMs in parallel:
+
+- ➡️ **Forward LSTM** — reads the sequence left to right
+- ⬅️ **Backward LSTM** — reads the sequence right to left
+
+By combining both directions, the model gains richer context about each time step, which is particularly powerful for network traffic where attack signatures may span packets in complex, non-linear ways.
+
+### Training Dataset — NSL-KDD
+
+The **NSL-KDD** dataset is an improved version of the classic KDD Cup 1999 dataset, correcting for duplicate records and class imbalance. It contains labeled network connection records across:
+
+| Label | Attack Category | Examples |
+|---|---|---|
+| `Normal` | Benign traffic | Regular HTTP, DNS, SSH sessions |
+| `DoS` | Denial of Service | Neptune, Smurf, Pod, Teardrop |
+| `Probe` | Reconnaissance | Satan, IPsweep, Portsweep, Nmap |
+| `R2L` | Remote to Local | Guess_passwd, FTP_write, Imap |
+| `U2R` | User to Root | Buffer_overflow, Rootkit, Perl |
+
+---
+
+## ⚙️ Installation & Setup
+
+### Prerequisites
+
+- Python 3.8 or higher
+- [Wireshark / tshark](https://www.wireshark.org/download.html) installed and accessible in `PATH`
+- Sufficient permissions to capture network packets (may require `sudo` on Linux/macOS)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/harshithhraya/real-time-intrusion-detection-system.git
+cd real-time-intrusion-detection-system
+```
+
+### 2. Install Python Dependencies
+
+```bash
+pip install tensorflow numpy pandas scikit-learn
+```
+
+### 3. Verify tshark
+
+```bash
+tshark --version
+```
+
+> **Linux users:** You may need `sudo` or add your user to the `wireshark` group:
+> ```bash
+> sudo usermod -aG wireshark $USER
+> ```
+
+### 4. Fix Model Compatibility (if needed)
+
+If you encounter Keras/TensorFlow version mismatch errors:
+
+```bash
+python fix_model_compatibility.py
+python fix_columns_pkl.py
+```
+
+---
+
+## 🚀 Usage
+
+### Run the Real-Time IDS
 
 ```bash
 python realtime_ids.py
 ```
-## Results
 
-- Achieved ~XX% accuracy on NSL-KDD dataset  
-- Successfully detected multiple attack types in real-time traffic  
+The script will:
+1. Start capturing live packets from your default network interface via `tshark`
+2. Preprocess each packet's features using the saved `columns.pkl` schema
+3. Run the BiLSTM model to classify traffic
+4. Print predictions to the console and log alerts to `ids_alerts.jsonl`
 
-## Future Improvements
+### Convert Model Format
 
-* Improve model accuracy
-* Deploy as a web-based dashboard
-* Optimize for lower latency
+```bash
+python convert_model.py
+```
 
-## Author
+---
 
-Harshith H
+## 📊 Results
+
+| Metric | Value |
+|---|---|
+| **Dataset** | NSL-KDD (Train + Test splits) |
+| **Model** | Bidirectional LSTM |
+| **Training Accuracy** | ~XX% *(update with actual result)* |
+| **Test Accuracy** | ~XX% *(update with actual result)* |
+| **Attack Categories Detected** | DoS, Probe, R2L, U2R |
+| **Inference Mode** | Real-time (live packet capture) |
+
+> 💡 **Tip:** Run `python realtime_ids.py` on a network with known test traffic (e.g., using tools like `hping3` or `nmap` in a lab environment) to validate real-time detection performance.
+
+---
+
+## 🔭 Roadmap & Future Improvements
+
+- [ ] 📊 **Web Dashboard** — Real-time attack visualization with charts and live alert feed
+- [ ] 🎯 **Higher Accuracy** — Experiment with attention mechanisms and hybrid CNN-BiLSTM architectures
+- [ ] ⚡ **Lower Latency** — Optimize the preprocessing pipeline for sub-millisecond inference
+- [ ] 🐳 **Docker Support** — Containerize the entire system for easy deployment
+- [ ] 📡 **PCAP Replay Mode** — Test the model against pre-recorded `.pcap` files
+- [ ] 🔔 **Alerting Integrations** — Push alerts to Slack, email, or SIEM systems
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! If you'd like to improve the model, add features, or fix bugs:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature/your-feature-name`
+5. Open a Pull Request
+
+---
+
+## 👥 About
+
+This project was developed by students of the **Department of Information Science & Engineering, BMS College of Engineering (BMSCE), Bengaluru** as part of an academic research initiative in the domain of network security and deep learning.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — feel free to use, modify, and distribute it.
+
+---
