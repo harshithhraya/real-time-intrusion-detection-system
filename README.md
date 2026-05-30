@@ -185,12 +185,16 @@ python convert_model.py
 
 | Metric | Value |
 |---|---|
-| **Dataset** | NSL-KDD (Train + Test splits) |
-| **Model** | Bidirectional LSTM |
-| **Training Accuracy** | ~XX% *(update with actual result)* |
-| **Test Accuracy** | ~XX% *(update with actual result)* |
-| **Attack Categories Detected** | DoS, Probe, R2L, U2R |
-| **Inference Mode** | Real-time (live packet capture) |
+| **Dataset** | NSL-KDD (125,973 train / 22,544 test records) |
+| **Model** | 1D-CNN + BiLSTM × 2 |
+| **Overall Accuracy** | 99.16% |
+| **Misclassification Rate** | 0.84% |
+| **False Positive Rate** | 0.83% |
+| **DoS Detection Rate** | 99.84% |
+| **Probe Detection Rate** | 98.98% |
+| **R2L Detection Rate** | 91.73% |
+| **U2R Detection Rate** | 36.84% *(limited by only 52 training examples in dataset)* |
+| **Inference Mode** | Real-time (live packet capture via TShark) |
 
 > 💡 **Tip:** Run `python realtime_ids.py` on a network with known test traffic (e.g., using tools like `hping3` or `nmap` in a lab environment) to validate real-time detection performance.
 
